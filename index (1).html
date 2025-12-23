@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>creedameen!</title>
+    <style>
+        /* --- CSS STYLING --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #050000; /* Pitch black background */
+            font-family: 'Courier New', Courier, monospace;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: relative;
+        }
+
+        /* The Background Glow - Pink */
+        .glow-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 20, 147, 0.15), transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Canvas for Particles */
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        /* Main Content Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Main Title */
+        h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+            letter-spacing: -2px;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.8);
+            margin-bottom: 40px; /* Space between title and button */
+        }
+
+        /* --- GAME BUTTON STYLING --- */
+        .game-btn {
+            text-decoration: none;
+            color: #ff1493; /* Neon Pink Text */
+            background: transparent;
+            border: 2px solid #ff1493;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 15px rgba(255, 20, 147, 0.2); /* Soft initial glow */
+        }
+
+        /* Hover Effect: Fill with pink, glow gets brighter */
+        .game-btn:hover {
+            background-color: #ff1493;
+            color: #000; /* Text turns black for contrast */
+            box-shadow: 0 0 40px rgba(255, 20, 147, 0.8), 0 0 10px rgba(255, 255, 255, 0.5);
+            transform: scale(1.05); /* Slight pop */
+            cursor: pointer;
+        }
+
+        /* Active click effect */
+        .game-btn:active {
+            transform: scale(0.95);
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+    <div class="glow-overlay"></div>
+
+    <div class="container">
+        <!-- Main Title -->
+        <h1>creedameen!</h1>
+
+        <!-- Game Link Button -->
+        <a href="https://www.crazygames.com/preview/e4c8f9e3-c6b9-4e3b-ae4c-935334448c38?sdk_debug=true&gameBuildId=40325e77-ca75-4181-935c-d8e7998e8a5c&qaTool=true&disableSubmitQA=true&role=developer" target="_blank" class="game-btn">
+            My Upcoming Game
+        </a>
+    </div>
+
+    <script>
+        /* --- PARTICLES SCRIPT --- */
+        // Ensure the code runs only after the page is fully loaded to prevent script errors
+        window.onload = function() {
+            const canvas = document.getElementById("canvas");
+            if (!canvas) return; // Safety check
+            const ctx = canvas.getContext("2d");
+
+            let w, h;
+            let particles = [];
+            const particleCount = 100;
+            const connectionDistance = 140;
+
+            function resize() {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            }
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 1.5 + 0.5;
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > w) this.vx *= -1;
+                    if (this.y < 0 || this.y > h) this.vy *= -1;
+                }
+
+                draw() {
+                    // Hot Pink Dots
+                    ctx.fillStyle = "rgba(255, 105, 180, 0.9)"; 
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function init() {
+                resize();
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+                requestAnimationFrame(animate);
+            }
+
+            function animate() {
+                // Clear the canvas
+                ctx.clearRect(0, 0, w, h);
+                
+                // Loop through particles
+                particles.forEach((p, index) => {
+                    p.update();
+                    p.draw();
+
+                    // Draw connections
+                    for (let j = index + 1; j < particles.length; j++) {
+                        const p2 = particles[j];
+                        // Using Math.hypot for cleaner distance calculation
+                        const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+
+                        if (dist < connectionDistance) {
+                            ctx.beginPath();
+                            const opacity = 1 - dist / connectionDistance;
+                            // Deep Pink Lines
+                            ctx.strokeStyle = `rgba(255, 20, 147, ${opacity * 0.5})`; 
+                            ctx.lineWidth = 0.5;
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                });
+                
+                requestAnimationFrame(animate);
+            }
+
+            // On resize, just update dimensions, don't reset particles (smoother)
+            window.addEventListener("resize", resize);
+
+            // Start everything
+            init();
+        };
+    </script>
+</body>
+</html>
